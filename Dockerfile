@@ -18,7 +18,9 @@ RUN pip install tensorflow==2.1.0 \
 				pandas==1.0.1 \
 				scikit-learn==0.22.1 \
 				seaborn==0.10.0 \
-				jupyterlab==1.2.6
+				jupyterlab==1.2.6 \
+                Pillow==7.0.0 \
+                tqdm==4.43.0
 
 # setting up ssh server
 RUN apt-get update && apt-get install -y openssh-server
