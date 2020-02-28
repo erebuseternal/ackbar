@@ -25,3 +25,11 @@ ssh root@localhost -p 8000
 jupyter lab --ip=0.0.0.0 --allow-root
 exit
 ```
+
+## Sublime Instructions
+First you'll need to install rsub on sublime (see the first step here: https://acarril.github.io/posts/ssh-sripts-st3)
+
+Then with the container running, open a tunnel with:
+`ssh -R 52698:localhost:52698 root@localhost -p 8000`
+
+Then within the container run `rmate <file>` to pipe that file up to sublime.
