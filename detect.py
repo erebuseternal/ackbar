@@ -76,6 +76,7 @@ if __name__ == '__main__':
 					cropped_image.save(image_path)
 	output_path = '/'.join([args.output, 'metadata.json'])
 	with open(output_path, 'w') as fh:
+        output_image_meta_data = {'images': output_image_meta_data}
 		json.dump(output_image_meta_data, fh)
 
 
