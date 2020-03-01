@@ -20,7 +20,9 @@ RUN pip install tensorflow==2.1.0 \
 				seaborn==0.10.0 \
 				jupyterlab==1.2.6 \
                 Pillow==7.0.0 \
-                tqdm==4.43.0
+                tqdm==4.43.0 \
+                azureml-sdk[notebooks,automl] \
+                azure-storage-blob
 
 # setting up ssh server
 RUN apt-get update && apt-get install -y openssh-server
