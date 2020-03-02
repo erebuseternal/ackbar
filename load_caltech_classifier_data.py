@@ -32,7 +32,10 @@ for case in ['test', 'train']:
 	for image_path in tqdm(image_paths):
 		blob_client = client.get_blob_client(container=container, blob=image_path)
 		image_id = image_path.split('/')[-1].split('.')[0]
-		file_path = '/'.join([case, image_id + '.jpg'])
+		file_path = '/'.join([case] + image_path.split('/')[-2:])
+		directory = '/'.join(file_path.split('/')[:-1])
+		if not os.path.exists(directory):
+			os.mkdir(directory)
 		with open(file_path, 'wb') as fh:
 			fh.write(blob_client.download_blob().readall())
 		creature = image_path.split('/')[-2]
