@@ -1,6 +1,10 @@
 import tensorflow as tf
 import numpy as np
 import os
+import argparse
+import pickle
+import time
+import json
 
 
 CLASS_NAMES = np.array(['badger', 'bird', 'bobcat', 'car', 'cat', 'coyote', 'deer', 'dog', 
@@ -14,7 +18,6 @@ BATCH_SIZE = 32
 SHUFFLE_BUFFER_SIZE = 1000
 LEARNING_RATE = 0.0001
 TRAINING_EPOCHS = 10
-LAYERS_TO_TUNE = 10
 
 
 def process_path(file_path):
@@ -37,14 +40,26 @@ def build_dataset(file_pattern):
 
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--layers', help='number of layers to tune',
+                        type=int, default=0)
+	parser.add_argument('--epochs', help='number of epochs to train',
+                        type=int, default=10)
+	parser.add_argument('--rate', help='learning rate',
+                        type=float, default=0.0001)
+	args = parser.parse_args()
+    
+	run_id = int(time.time())
+    
 	train = build_dataset('train/*/*.jpg')
 	test = build_dataset('test/*/*.jpg')
 	IMG_SHAPE = (160, 160, 3)
-	base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
+	base_model = tf.keras.applications.inception_v3.InceptionV3(input_shape=IMG_SHAPE,
 													include_top=False,
 													weights='imagenet')
+	base_model.summary()
 	base_model.trainable = True
-	for layer in base_model.layers[:len(base_model.layers) - LAYERS_TO_TUNE]:
+	for layer in base_model.layers[:len(base_model.layers) - args.layers]:
 		layer.trainable = False
 	model = tf.keras.models.Sequential([
 		base_model,
@@ -53,14 +68,26 @@ if __name__ == '__main__':
 		tf.keras.layers.Activation('softmax'),
 	])
 	model.compile(
-		optimizer=tf.keras.optimizers.RMSprop(lr=LEARNING_RATE),
+		optimizer=tf.keras.optimizers.RMSprop(lr=args.rate),
 		loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
 		metrics=['accuracy']
 	)
 	model.summary()
 	history = model.fit(train,
-						epochs=initial_epochs,
-						validation_data=test)
+						epochs=args.epochs,
+						validation_data=train)
+
+	with open('config_%s.json' % run_id, 'w') as fh:
+		json.dump({
+            'layers': args.layers,
+            'epochs': args.epochs,
+            'rate': args.rate,
+            'history': {
+                k: [float(e) for e in v]
+                for k, v in history.history.items()
+            },
+        }, fh)
+    
 	if not os.path.exists('classifier'):
 		os.mkdir('classifier')
 	tf.saved_model.save(model, 'classifier/')
