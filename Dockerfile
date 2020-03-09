@@ -3,7 +3,8 @@ MAINTAINER "Marcel Gietzmann-Sanders" "marcelsanders96@gmail.com"
 
 RUN apt-get -y update && \
 	apt-get -y upgrade && \
-	apt-get install -y build-essential
+	apt-get install -y build-essential && \
+	apt-get install -y libpq-dev
 
 # basic editor installation
 RUN apt-get -y install vim
@@ -21,6 +22,7 @@ RUN pip install tensorflow==2.1.0 \
 				jupyterlab==1.2.6 \
                 Pillow==7.0.0 \
                 tqdm==4.43.0 \
+                psycopg2==2.8.4 \
                 azureml-sdk[notebooks,automl] \
                 azure-storage-blob
 

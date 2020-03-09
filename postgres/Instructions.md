@@ -20,3 +20,7 @@ First you'll need to download the client side of Postgres to your local machine.
 `psql -U postgres`
 
 Or use pgadmin4.
+
+
+#### Finding the Docker Bridge Network Hostname
+`docker network inspect bridge`

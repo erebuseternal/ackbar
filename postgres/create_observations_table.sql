@@ -1,0 +1,4 @@
+CREATE TABLE uploads (
+	upload_id INTEGER PRIMARY KEY,
+	observation_time TIMESTAMP WITHOUT TIME ZONE
+)
