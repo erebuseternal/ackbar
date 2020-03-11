@@ -3,7 +3,9 @@ import datetime
 import os
 import io
 import pandas as pd
-
+import tensorflow as tf
+import numpy as np
+from PIL import Image
 
 class LocalBroker(object):
     def __init__(self, directory='/root/local_storage'):
@@ -34,8 +36,8 @@ sql = """
 SELECT observation_time FROM detections 
 ORDER BY observation_time DESC LIMIT 1;
 """
-cursor = conn.cursor(sql)
-cursor.execute()
+cursor = conn.cursor()
+cursor.execute(sql)
 try:
     result = next(cursor)
     latest_date = result[0]
@@ -45,7 +47,7 @@ except StopIteration:
 # next we can query for all of the uploads we need
 # to run the detector on
 sql = """
-SELECT upload_id FROM uploads
+SELECT upload_id, observation_time FROM uploads
 WHERE observation_time > '%s'
 """ % latest_date
 cursor.execute(sql)
@@ -57,25 +59,27 @@ for result in cursor:
 cursor.close()
 
 # next we create the detections
-batch_size = os.environ['BATCH_SIZE']
+batch_size = int(os.environ['BATCH_SIZE'])
 broker = LocalBroker()
 detection_model = tf.saved_model.load(os.environ['MODEL_PATH']).signatures['default']
+records = []
 for i in range(0, len(upload_ids), batch_size):
     upload_id_batch = upload_ids[i:i+batch_size]
     observation_time_batch = observation_times[i:i+batch_size]
     images = [Image.open(io.BytesIO(broker.download(upload_id, 'upload')))
               for upload_id in upload_id_batch]
     images = [image.convert('RGB') for image in images]
+    images = [image.resize((1494, 2048)) for image in images]
     images = [np.asarray(image, np.float32) for image in images]
     input_tensor = tf.convert_to_tensor(np.array(images))
-    detections = detection_model(inference_tensor)
+    detections = detection_model(input_tensor)
     scores = detections['detection_scores'].numpy()
     labels = detections['detection_classes'].numpy()
     bboxes = detections['detection_boxes'].numpy()
     for j, (upload_id, observation_time) in enumerate(zip(upload_id_batch, observation_time_batch)):
         for k, (score, label) in enumerate(zip(scores[j], labels[j])):
             if score >= 0.9 and label == 1.:
-                y1, x0, y0, x1 = bboxes[k][j]
+                y1, x0, y0, x1 = [float(e) for e in bboxes[k][j]]
                 records.append((
                     upload_id, observation_time, k, y0, y1, x0, x1
                 ))
