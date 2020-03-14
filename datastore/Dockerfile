@@ -42,4 +42,9 @@ RUN apt-get -y install git
 # clone ackbar
 RUN git clone https://github.com/erebuseternal/ackbar.git
 
-CMD ["/usr/sbin/sshd", "-D"]
+RUN cd /ackbar/datastore
+ENV LC_ALL=C.UTF-8
+ENV FLASK_APP=datastore.py
+RUN chmod +x start.sh
+
+CMD ["start.sh"]
