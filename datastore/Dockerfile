@@ -15,36 +15,16 @@ RUN apt-get -y install python3.6 && \
 	pip3 install --upgrade setuptools pip
 RUN echo "alias python=python3.6" >> /root/.bashrc
 
-RUN pip install pandas==1.0.1 \
-				seaborn==0.10.0 \
-				jupyterlab==1.2.6 \
-                Pillow==7.0.0 \
-                tqdm==4.43.0 \
-                flask
+RUN pip install flask
 
-# setting up ssh server
-RUN apt-get update && apt-get install -y openssh-server
-RUN mkdir /var/run/sshd
-RUN echo "root:ackbar" | chpasswd
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN apt-get update && apt-get install -y dos2unix
 
-# SSH login fix. Otherwise user is kicked off after login
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+COPY start.sh start.sh
+COPY datastore.py datastore.py
 
-ENV NOTVISIBLE "in users profile"
-RUN echo "export VISIBLE=now" >> /etc/profile
-
-EXPOSE 22 8888 5000
-
-# install git
-RUN apt-get -y install git
-
-# clone ackbar
-RUN git clone https://github.com/erebuseternal/ackbar.git
-
-RUN cd /ackbar/datastore
-ENV LC_ALL=C.UTF-8
-ENV FLASK_APP=datastore.py
 RUN chmod +x start.sh
 
-CMD ["start.sh"]
+RUN dos2unix /start.sh
+RUN dos2unix /datastore.py
+
+CMD ["/start.sh"]
