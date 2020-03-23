@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Validate {{project}}{% endblock %}
+
+{% block page_content %}
+<img src="{{ image_url }}"/>
+<form method="POST">
+    {% for option in top %}
+    <button method="submit" name="selection_from_top" value="{{ option }}">
+        {{ option }}
+    </button>
+    {% endfor %}
+    <select name="selection_from_other">
+        {% for option in other %}
+        <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+    </select>
+    <input type="submit">
+</form>
+{% if back_url %}
+<a href="{{ back_url }}">Back</a>
+{% endif %}
+{% if next_url %}
+<a href="{{ next_url }}">Next</a>
+{% endif %}
+{% endblock %}
+
