@@ -1,12 +1,17 @@
+import os
 from PIL import Image
 
 def get_image(upload_id):
-    return Image.open('images/%s.jpg')
+    return Image.open('webapp/main/images/%s.jpg' % upload_id)
 
 def crop_image(image, left, upper, right, lower):
+    left = image.size[0] * left
+    upper = image.size[1] * upper
+    right = image.size[0] * right
+    lower = image.size[1] * lower
     return image.crop((left, upper, right, lower))
 
-def create_curator(project, session):
+def get_curator(project, session):
     return Curator(project, session)
 
 class Curator(object):
@@ -14,13 +19,13 @@ class Curator(object):
         self.session = session
         self.project = project
         self.upload_ids = sorted(
-            [path.split('.')[0] for path in os.path.listdir('images')
+            [path.split('.')[0] for path in os.listdir('webapp/main/images')
              if path.endswith('jpg')]
         )
     
     def pull(self, session, upload_id, detection_id):
-        i = next([j for j in range(len(self.upload_ids))
-                  if self.upload_ids[j] == upload_id])
+        i = next(j for j in range(len(self.upload_ids))
+                  if self.upload_ids[j] == upload_id)
         before = (self.upload_ids[i - 1], 0) if i > 0 else (None, None)
         after = (self.upload_ids[i + 1], 0) if i < len(self.upload_ids) - 1 else (None, None)
         top = ['Dog', 'Cat', 'Elephant']
@@ -32,6 +37,9 @@ class Curator(object):
             'x1': 0.75
         }
         return after, before, top, other, bbox
+    
+    def first(self, session):
+        return self.upload_ids[0], 0
             
 def update_record(upload_id, detection_id, selection):
     pass

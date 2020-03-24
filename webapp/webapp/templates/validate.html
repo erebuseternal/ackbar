@@ -5,20 +5,24 @@
 {% block page_content %}
 <img src="{{ image_url }}"/>
 <form method="POST">
+    <div class="form-group">
     {% for option in top %}
-    <button method="submit" name="selection_from_top" value="{{ option }}">
+    <button class="btn btn-primary" method="submit" name="selection_from_top" value="{{ option }}">
         {{ option }}
     </button>
     {% endfor %}
+    </div>
+    <div class="form-group">
     <select name="selection_from_other">
         {% for option in other %}
         <option value="{{ option }}">{{ option }}</option>
         {% endfor %}
     </select>
-    <input type="submit">
+        <button method="submit">Submit</button>
+    </div>
 </form>
-{% if back_url %}
-<a href="{{ back_url }}">Back</a>
+{% if last_url %}
+<a href="{{ last_url }}">Back</a>
 {% endif %}
 {% if next_url %}
 <a href="{{ next_url }}">Next</a>
