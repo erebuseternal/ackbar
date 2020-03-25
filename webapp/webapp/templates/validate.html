@@ -20,15 +20,17 @@
                 </div>
             </div>
             <h2>Alternatives</h2>
+            {% for row in other %}
             <div class="form-group">
                 <div class="btn-group" role="group">
-                {% for option in other %}
+                {% for option in row %}
                 <button class="btn btn-secondary" method="submit" name="selection_from_other" value="{{ option }}" id="top picks">
                     {{ option }}
                 </button>
                 {% endfor %}
                 </div>
             </div>
+            {% endfor %}
         </form>
     </div>
     <div class="row text-center">

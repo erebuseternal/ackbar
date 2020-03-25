@@ -42,6 +42,12 @@ def validate(project, upload_id, detection_id):
                                 detection_id=before[1])
         else:
             last_url = None
+        num_cols = 5
+        other = sorted(other)
+        rows = []
+        for i in range(0, len(other), num_cols):
+            rows.append(other[i:i+num_cols])
+        other = rows
         return render_template('validate.html', project=project, 
                                upload_id=upload_id, image_url=image_url,
                                next_url=next_url, last_url=last_url, top=top, 
