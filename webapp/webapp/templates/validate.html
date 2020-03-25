@@ -3,29 +3,40 @@
 {% block title %}Validate {{project}}{% endblock %}
 
 {% block page_content %}
-<img src="{{ image_url }}"/>
-<form method="POST">
-    <div class="form-group">
-    {% for option in top %}
-    <button class="btn btn-primary" method="submit" name="selection_from_top" value="{{ option }}">
-        {{ option }}
-    </button>
-    {% endfor %}
+<div class="container">
+    <div class="row text-center">
+        <img src="{{ image_url }}" class="img-thumbnail"/>
     </div>
-    <div class="form-group">
-    <select name="selection_from_other">
-        {% for option in other %}
-        <option value="{{ option }}">{{ option }}</option>
-        {% endfor %}
-    </select>
-        <button method="submit">Submit</button>
+    <div class="row text-center">
+        <form method="POST">
+            <h2>Predicted</h2>
+            <div class="form-group">
+                <div class="btn-group" role="group">
+                {% for option in top %}
+                <button class="btn btn-secondary" method="submit" name="selection_from_top" value="{{ option }}" id="top picks">
+                    {{ option }}
+                </button>
+                {% endfor %}
+                </div>
+            </div>
+            <h2>Alternatives</h2>
+            <div class="form-group">
+                <div class="btn-group" role="group">
+                {% for option in other %}
+                <button class="btn btn-secondary" method="submit" name="selection_from_other" value="{{ option }}" id="top picks">
+                    {{ option }}
+                </button>
+                {% endfor %}
+                </div>
+            </div>
+        </form>
     </div>
-</form>
-{% if last_url %}
-<a href="{{ last_url }}">Back</a>
-{% endif %}
-{% if next_url %}
-<a href="{{ next_url }}">Next</a>
-{% endif %}
+    <div class="row text-center">
+        <div class="btn-group" role="group">
+            <a href="{% if last_url %}{{ last_url }}{% else %}#{% endif %}" class="btn btn-primary btn-md{% if not last_url %} disabled{% endif %}" role="button" aria-disabled="true">Back</a>
+            <a href="{% if next_url %}{{ next_url }}{% else %}#{% endif %}" class="btn btn-primary btn-md{% if not next_url %} disabled{% endif %}" role="button" aria-disabled="true">Next</a>
+        </div>
+    </div>
+</div>
 {% endblock %}
 

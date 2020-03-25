@@ -36,14 +36,12 @@ def validate(project, upload_id, detection_id):
                                 detection_id=after[1])
         else:
             next_url = None
-        print(before)
         if before[0] is not None:
             last_url = url_for('.validate', project=project, 
                                 upload_id=before[0],
                                 detection_id=before[1])
         else:
             last_url = None
-        print(next_url)
         return render_template('validate.html', project=project, 
                                upload_id=upload_id, image_url=image_url,
                                next_url=next_url, last_url=last_url, top=top, 
@@ -55,7 +53,6 @@ def validate(project, upload_id, detection_id):
             selection = request.form['selection_from_top']
         else:
             selection = request.form['selection_from_other']
-        print(selection)
         update_record(upload_id, detection_id, selection)
         if not next_upload_id:
             return redirect(url_for('.all_done', project=project))
@@ -65,8 +62,7 @@ def validate(project, upload_id, detection_id):
     
 @main.route('/validate/<project>/all_done', methods=['GET'])
 def all_done(project):
-    return render_template('all_done.html')
-    
+    return render_template('all_done.html') 
 
 @main.route('/image/<project>/<upload_id>', methods=['GET'])
 def image(project, upload_id):
@@ -77,7 +73,4 @@ def image(project, upload_id):
     image = get_image(upload_id)
     if None not in [upper, left, right, lower]:
         image = crop_image(image, float(left), float(upper), float(right), float(lower))
-    #response = make_response(image)
-    #response.content_type = 'image/jpg'
-    #return response
     return serve_pil_image(image)

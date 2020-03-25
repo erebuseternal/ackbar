@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
 {% block page_content %}
-<h1>All Done! Nothing to Do.</h1>
+<div class="alert alert-success" role="alert">
+  <h4 class="alert-heading">Well done!</h4>
+  <p>Sweet! All of the images currently in the database for this project have been validated. Thanks for your work!</p>
+  <hr>
+    <p class="mb-0">Click <a href={{ url_for('main.projects') }}>here</a> to return to the projects page.</p>
+</div>
 {% endblock %}
