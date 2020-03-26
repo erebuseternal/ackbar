@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Validate {{project}}{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <div class="row text-center">
+        <img src="{{ image_url }}" class="img-thumbnail"/>
+    </div>
+    <div class="row text-center">
+        <form method="POST">
+            <h2>Predicted</h2>
+            <div class="form-group">
+                <div class="btn-group" role="group">
+                {% for option in top %}
+                <button class="btn btn-secondary" method="submit" name="selection_from_top" value="{{ option }}" id="top picks">
+                    {{ option }}
+                </button>
+                {% endfor %}
+                </div>
+            </div>
+            <h2>Alternatives</h2>
+            {% for row in other %}
+            <div class="form-group">
+                <div class="btn-group" role="group">
+                {% for option in row %}
+                <button class="btn btn-secondary" method="submit" name="selection_from_other" value="{{ option }}" id="top picks">
+                    {{ option }}
+                </button>
+                {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </form>
+    </div>
+    <div class="row text-center">
+        <div class="btn-group" role="group">
+            <a href="{% if last_url %}{{ last_url }}{% else %}#{% endif %}" class="btn btn-primary btn-md{% if not last_url %} disabled{% endif %}" role="button" aria-disabled="true">Back</a>
+            <a href="{% if next_url %}{{ next_url }}{% else %}#{% endif %}" class="btn btn-primary btn-md{% if not next_url %} disabled{% endif %}" role="button" aria-disabled="true">Next</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
