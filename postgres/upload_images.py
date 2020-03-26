@@ -29,20 +29,14 @@ if __name__ == '__main__':
     parser.add_argument('--meta', help='path to meta data',
                         type=str)
     parser.add_argument('--sql', help='hostname of postgres db',
-                        type=str)
+                        type=str, default='172.17.0.2')
     parser.add_argument('--password', help='password for postgres db',
-                        type=str)
+                        type=str, default='ackbar')
     parser.add_argument('--store', help='hostname of storage',
-                        type=str)
+                        type=str, default='172.17.0.3')
     args = parser.parse_args()
     if args.meta is None:
         parser.error('please specify --meta')
-    if args.sql is None:
-        parser.error('please specify --sql')
-    if args.password is None:
-        parser.error('please specify --password')
-    if args.store is None:
-        parser.error('please specify --store')
         
     # create connection to db
     conn = psycopg2.connect('host=%s dbname=postgres user=postgres password=%s' %
@@ -58,9 +52,9 @@ if __name__ == '__main__':
         observation_time = data['observation_time']
         with open(image_path, 'rb') as fh:
             broker.upload(fh, 'upload', upload_id)
-        records.append((upload_id, observation_time))
+        records.append(('caltech', upload_id, observation_time))
     cursor.executemany(
-        "INSERT INTO uploads VALUES (%s, %s)",
+        "INSERT INTO uploads VALUES (%s, %s, %s)",
         records
     )
     conn.commit()

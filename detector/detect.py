@@ -49,15 +49,17 @@ except StopIteration:
 # next we can query for all of the uploads we need
 # to run the detector on
 sql = """
-SELECT upload_id, observation_time FROM uploads
+SELECT project, upload_id, observation_time FROM uploads
 WHERE observation_time > '%s'
 """ % latest_date
 cursor.execute(sql)
+projects = []
 upload_ids = []
 observation_times = []
 for result in cursor:
-    upload_ids.append(result[0])
-    observation_times.append(result[1])
+    projects.append(result[0])
+    upload_ids.append(result[1])
+    observation_times.append(result[2])
 cursor.close()
 
 if upload_ids:
@@ -69,6 +71,7 @@ if upload_ids:
     for i in tqdm(range(0, len(upload_ids), batch_size)):
         upload_id_batch = upload_ids[i:i+batch_size]
         observation_time_batch = observation_times[i:i+batch_size]
+        project_batch = projects[i:i+batch_size]
         images = [Image.open(io.BytesIO(broker.download('upload', upload_id)))
                   for upload_id in upload_id_batch]
         images = [image.convert('RGB') for image in images]
@@ -79,18 +82,18 @@ if upload_ids:
         scores = detections['detection_scores'].numpy()
         labels = detections['detection_classes'].numpy()
         bboxes = detections['detection_boxes'].numpy()
-        for j, (upload_id, observation_time) in enumerate(zip(upload_id_batch, observation_time_batch)):
+        for j, (project, upload_id, observation_time) in enumerate(zip(project_batch, upload_id_batch, observation_time_batch)):
             for k, (score, label) in enumerate(zip(scores[j], labels[j])):
                 if score >= 0.9 and label == 1.:
                     y1, x0, y0, x1 = [float(e) for e in bboxes[j][k]]
                     records.append((
-                        upload_id, observation_time, k, y0, y1, x0, x1
+                        project, upload_id, observation_time, k, y0, y1, x0, x1
                     ))
 
     # finally we upload all the new records
     cursor = conn.cursor()
     cursor.executemany(
-        "INSERT INTO detections VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        "INSERT INTO detections VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
          records
     )
     conn.commit()
