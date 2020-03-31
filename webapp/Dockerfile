@@ -9,6 +9,8 @@ RUN apt-get -y update && \
 # basic editor installation
 RUN apt-get -y install vim
 
+RUN apt-get -y install wget
+
 # add python and libraries
 RUN apt-get -y install python3.6 && \
 	apt-get -y install python3-pip && \
@@ -23,7 +25,9 @@ RUN pip install tensorflow==2.1.0 \
                 Pillow==7.0.0 \
                 tqdm==4.43.0 \
                 psycopg2==2.8.4 \
-                flask
+                flask \
+                flask-bootstrap \
+                redis
 
 # setting up ssh server
 RUN apt-get update && apt-get install -y openssh-server
@@ -37,7 +41,7 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
-EXPOSE 22 8888 5001
+EXPOSE 22 8888 5001 6379
 
 # rmate for piping sublime
 RUN wget -O /usr/local/bin/rmate https://raw.github.com/aurora/rmate/master/rmate
@@ -48,5 +52,15 @@ RUN apt-get -y install git
 
 # clone ackbar
 RUN git clone https://github.com/erebuseternal/ackbar.git
+
+# setting up redis
+RUN mkdir /redis/
+WORKDIR /redis
+RUN wget http://download.redis.io/redis-stable.tar.gz
+RUN tar xvzf redis-stable.tar.gz
+WORKDIR /redis/redis-stable
+RUN make
+RUN make install
+
 
 CMD ["/usr/sbin/sshd", "-D"]
