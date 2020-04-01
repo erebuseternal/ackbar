@@ -1,6 +1,7 @@
+import os
 import redis
-from datetime import datetime
 import psycopg2
+from datetime import datetime
 
 
 if __name__ == '__main__':
@@ -11,7 +12,7 @@ if __name__ == '__main__':
     )
     
     conn = psycopg2.connect('host=%s dbname=postgres user=postgres password=%s' 
-                            % (os.environ['POSTGRESS_HOSTNAME'], 
+                            % (os.environ['POSTGRES_HOSTNAME'], 
                                os.environ['POSTGRES_PASSWORD']))
     
     # first we need to grab a list of all of all of the projects

@@ -6,4 +6,4 @@
 `docker build -t "mgietzmann/populate_work_queue:latest" .`
 
 #### Running the Job
-`docker run mgietzmann/populate_work_queue:latest`
+`docker container run -it mgietzmann/populate_work_queue:latest`
