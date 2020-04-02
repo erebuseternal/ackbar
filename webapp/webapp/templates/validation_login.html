@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Validation Login{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <div class="row text-center">
+        <form method="POST">
+            <h2>Username</h2>
+            <div class="form-group">
+                <input type=text name='username'>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+    </div>
+    {% if message %}
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">{{ message }}</h4>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -2,6 +2,7 @@ from flask import render_template, request, session, url_for, redirect, make_res
 from io import BytesIO
 from . import main
 from .validate import get_curator, get_image, crop_image, update_record
+from .. import redis_client
 
 def serve_pil_image(pil_img):
     img_io = BytesIO()
@@ -15,13 +16,53 @@ def projects():
 
 @main.route('/validate/<project>', methods=['GET'])
 def start_validation(project):
-    curator = get_curator(project, session)
-    first_upload_id, first_detection_id = curator.first(session)
-    redirect_url = url_for('.validate', project=project, upload_id=first_upload_id,
-                           detection_id=first_detection_id)
-    if not first_upload_id:
-        return redirect(url_for('.all_done', project=project))
-    return redirect(redirect_url)
+    if request.method == 'GET':
+        if 'username' not in session:
+            return redirect(url_for('.validation_login', project=project))
+        stream_name = '%s_validation_work_stream' % project
+        # first we check for any pending work
+        pending_work = redis_client.xreadgroup('validation_workers', session['username'],
+                                    {stream_name: '0'}, count=1)
+        # comes down as [[<stream_name>, [work]]]
+        pending_work = pending_work[0][1]
+        if pending_work:
+            work_id, work_def = pending_work[0]
+            work_def = {
+                k.decode('utf-8'): v.decode('utf-8') if type(v) == bytes else v
+                for k, v in work_def.items()
+            }
+            
+        else:
+            new_work = redis_client.xreadgroup('validation_workers', session['username'],
+                                                {stream_name: '>'}, count=1)
+            return str(new_work)
+        image_url = url_for('.image', project=project, upload_id=upload_id)
+        image_url += '?' + '&'.join(['%s=%s' % (k, v) for k, v in bbox.items()])
+        num_cols = 5
+        other = []#sorted(other)
+        rows = []
+        for i in range(0, len(other), num_cols):
+            rows.append(other[i:i+num_cols])
+        other = rows
+        return render_template('validate.html', project=project, 
+                               upload_id=upload_id, image_url=image_url, 
+                               top=top, other=sorted(other))
+
+@main.route('/validate/<project>/login', methods=['GET', 'POST'])
+def validation_login(project):
+    if request.method == 'GET':
+        message = session.get('login_message')
+        if 'login_message' in session:
+            del session['login_message']
+        return render_template('validation_login.html', message=message)
+    else:
+        username = request.form['username'].strip().lower()
+        if not username:
+            session['login_message'] = 'Please specify a username'
+            return redirect(url_for('.validation_login', project=project))
+        session['username'] = username
+        return redirect(url_for('.start_validation', project=project))
+    
 
 @main.route('/validate/<project>/<upload_id>-<detection_id>', methods=['GET', 'POST'])
 def validate(project, upload_id, detection_id):

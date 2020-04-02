@@ -1,8 +1,30 @@
 import os
 from PIL import Image
+from flask import current_app
+
+class DockerBroker(object):
+    def __init__(self, hostname, port):
+        self.base_url = 'http://%s:%s' % (hostname, port)
+        
+    def upload(self, fh, bucket, key):
+        url = '%s/push?bucket=%s&key=%s.jpg' % (self.base_url, bucket, key)
+        files = {'upload': fh}
+        response = requests.post(url, files=files)
+        if not str(response.status_code).startswith('2'):
+            raise Exception('upload failed (%s): %s' % (url, response.status_code))
+    
+    def download(self, bucket, key):
+        url = '%s/pull?bucket=%s&key=%s.jpg' % (self.base_url, bucket, key)
+        response = requests.get(url)
+        if not str(response.status_code).startswith('2'):
+            raise Exception('download failed (%s): %s' % (url, response.status_code))
+        return response.content
 
 def get_image(upload_id):
-    return Image.open('webapp/main/images/%s.jpg' % upload_id)
+    storage_host = current_app.config['STORAGE_HOST']
+    storage_port = current_app.config['STORAGE_PORT']
+    broker = DockerBroker(storage_host, storage_port)
+    return Image.open(io.BytesIO(broker.download('upload', upload_id)))
 
 def crop_image(image, left, upper, right, lower):
     left = image.size[0] * left
