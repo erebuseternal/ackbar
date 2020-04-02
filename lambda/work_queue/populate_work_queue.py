@@ -72,3 +72,11 @@ if __name__ == '__main__':
         for record in records:
             redis_client.xadd(stream_name, record)
         print('Added ', len(records), ' to stream')
+
+        # now we just ensure that the validation_workers group
+        # had been created for this stream
+        groups_info = redis_client.xinfo_groups(stream_name)
+        group_names = [group['name'].decode('utf-8') for group in groups]
+        if stream_name not in group_names:
+            print('creating validation_workers group for stream')
+            redis_client.xgroup_create(stream_name, 'validation_workers', id=0)
