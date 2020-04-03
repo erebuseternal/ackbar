@@ -13,7 +13,7 @@
             <div class="form-group">
                 <div class="btn-group" role="group">
                 {% for option in top %}
-                <button class="btn btn-secondary" method="submit" name="selection_from_top" value="{{ option }}" id="top picks">
+                <button class="btn btn-secondary" method="submit" name="selection" value="{{ option }}" id="top picks">
                     {{ option }}
                 </button>
                 {% endfor %}
@@ -24,20 +24,19 @@
             <div class="form-group">
                 <div class="btn-group" role="group">
                 {% for option in row %}
-                <button class="btn btn-secondary" method="submit" name="selection_from_other" value="{{ option }}" id="top picks">
+                <button class="btn btn-secondary" method="submit" name="selection" value="{{ option }}" id="top picks">
                     {{ option }}
                 </button>
                 {% endfor %}
                 </div>
             </div>
             {% endfor %}
+            <div class="form-group" style="display: none">
+                <input type="text" readonly name="upload_id" value="{{ upload_id }}">
+                <input type="text" readonly name="detection_id" value="{{ detection_id }}">
+                <input type="text" readonly name="stream_id" value="{{ stream_id }}">
+            </div>
         </form>
-    </div>
-    <div class="row text-center">
-        <div class="btn-group" role="group">
-            <a href="{% if last_url %}{{ last_url }}{% else %}#{% endif %}" class="btn btn-primary btn-md{% if not last_url %} disabled{% endif %}" role="button" aria-disabled="true">Back</a>
-            <a href="{% if next_url %}{{ next_url }}{% else %}#{% endif %}" class="btn btn-primary btn-md{% if not next_url %} disabled{% endif %}" role="button" aria-disabled="true">Next</a>
-        </div>
     </div>
 </div>
 {% endblock %}

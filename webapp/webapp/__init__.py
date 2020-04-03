@@ -1,10 +1,12 @@
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_redis import Redis
+from flask_sqlalchemy import SQLAlchemy
 from .config import config
 
 bootstrap = Bootstrap()
 redis_client = Redis()
+db = SQLAlchemy()
 
 def create_app(config_name):
     app = Flask(__name__)
@@ -13,6 +15,7 @@ def create_app(config_name):
     
     bootstrap.init_app(app)
     redis_client.init_app(app)
+    db.init_app(app)
     
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)

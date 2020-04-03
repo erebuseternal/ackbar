@@ -1,6 +1,10 @@
 import os
+import io
+import requests
 from PIL import Image
 from flask import current_app
+from .. import redis_client
+from .. import db
 
 class DockerBroker(object):
     def __init__(self, hostname, port):
@@ -36,32 +40,24 @@ def crop_image(image, left, upper, right, lower):
 def get_curator(project, session):
     return Curator(project, session)
 
-class Curator(object):
-    def __init__(self, project, session):
-        self.session = session
-        self.project = project
-        self.upload_ids = sorted(
-            [path.split('.')[0] for path in os.listdir('webapp/main/images')
-             if path.endswith('jpg')]
-        )
-    
-    def pull(self, session, upload_id, detection_id):
-        i = next(j for j in range(len(self.upload_ids))
-                  if self.upload_ids[j] == upload_id)
-        before = (self.upload_ids[i - 1], 0) if i > 0 else (None, None)
-        after = (self.upload_ids[i + 1], 0) if i < len(self.upload_ids) - 1 else (None, None)
-        top = ['Dog', 'Cat', 'Elephant']
-        other = ['Horse', 'Crab', 'Frog']
-        bbox = {
-            'y1': 0.25,
-            'y0': 0.75,
-            'x0': 0.25,
-            'x1': 0.75
-        }
-        return after, before, top, other, bbox
-    
-    def first(self, session):
-        return self.upload_ids[0], 0
+def get_class_names(project):
+    cache_name = '%s_class_names' % project
+    if not redis_client.exists(cache_name):
+        result = db.session.execute("SELECT class_name FROM class_names WHERE project = '%s'" % project)
+        class_names = [r[0] for r in result]
+        redis_client.zadd(cache_name, {name: 1 for name in class_names})
+    else:
+        class_names = [name.decode('utf-8') 
+                       for name in redis_client.zrange(cache_name, 0, -1)]
+    return class_names
+        
             
-def update_record(upload_id, detection_id, selection):
-    pass
+def update_record(stream_name, stream_id, upload_id, detection_id, selection):
+    sql = '''
+    UPDATE classifications
+    SET class_name = '%s', validated = true
+    WHERE upload_id = '%s' AND detection_id = '%s'
+    ''' % (selection, upload_id, detection_id)
+    db.session.execute(sql)
+    db.session.commit()
+    redis_client.xack(stream_name, 'validation_workers', stream_id)

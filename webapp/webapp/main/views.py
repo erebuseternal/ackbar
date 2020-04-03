@@ -1,7 +1,7 @@
 from flask import render_template, request, session, url_for, redirect, make_response, send_file
 from io import BytesIO
 from . import main
-from .validate import get_curator, get_image, crop_image, update_record
+from .validate import get_curator, get_image, crop_image, update_record, get_class_names
 from .. import redis_client
 
 def serve_pil_image(pil_img):
@@ -14,12 +14,12 @@ def serve_pil_image(pil_img):
 def projects():
     return render_template('projects.html')
 
-@main.route('/validate/<project>', methods=['GET'])
-def start_validation(project):
+@main.route('/validate/<project>', methods=['GET', 'POST'])
+def validate(project):
+    stream_name = '%s_validation_work_stream' % project
     if request.method == 'GET':
         if 'username' not in session:
             return redirect(url_for('.validation_login', project=project))
-        stream_name = '%s_validation_work_stream' % project
         # first we check for any pending work
         pending_work = redis_client.xreadgroup('validation_workers', session['username'],
                                     {stream_name: '0'}, count=1)
@@ -35,18 +35,36 @@ def start_validation(project):
         else:
             new_work = redis_client.xreadgroup('validation_workers', session['username'],
                                                 {stream_name: '>'}, count=1)
-            return str(new_work)
+            new_work = new_work[0][1]
+            if new_work:
+                work_id, work_def = new_work[0]
+                work_def = {
+                    k.decode('utf-8'): v.decode('utf-8') if type(v) == bytes else v
+                    for k, v in work_def.items()
+                }
+        upload_id = work_def['upload_id']
+        detection_id = work_def['detection_id']
         image_url = url_for('.image', project=project, upload_id=upload_id)
-        image_url += '?' + '&'.join(['%s=%s' % (k, v) for k, v in bbox.items()])
-        num_cols = 5
-        other = []#sorted(other)
+        image_url += '?' + '&'.join(['%s=%s' % (k, v) for k, v in work_def.items()
+                                     if k in ('y0', 'y1', 'x0', 'x1')])
+        top = [work_def[k] for k in ('c0', 'c1', 'c2', 'c3', 'c4')]
+        num_cols = len(top)
+        other = sorted([name for name in get_class_names(project)
+                        if name not in top])
         rows = []
         for i in range(0, len(other), num_cols):
             rows.append(other[i:i+num_cols])
         other = rows
         return render_template('validate.html', project=project, 
                                upload_id=upload_id, image_url=image_url, 
-                               top=top, other=sorted(other))
+                               top=top, other=other, stream_id=work_id.decode('utf-8'),
+                               detection_id=detection_id)
+    else:
+        update_record(stream_name, request.form['stream_id'],
+                      request.form['upload_id'], request.form['detection_id'],
+                      request.form['selection'])
+        return redirect(url_for('.validate', project=project))
+        
 
 @main.route('/validate/<project>/login', methods=['GET', 'POST'])
 def validation_login(project):
@@ -61,51 +79,7 @@ def validation_login(project):
             session['login_message'] = 'Please specify a username'
             return redirect(url_for('.validation_login', project=project))
         session['username'] = username
-        return redirect(url_for('.start_validation', project=project))
-    
-
-@main.route('/validate/<project>/<upload_id>-<detection_id>', methods=['GET', 'POST'])
-def validate(project, upload_id, detection_id):
-    if request.method == 'GET':
-        curator = get_curator(project, session)
-        after, before, top, other, bbox = curator.pull(session, upload_id, detection_id)
-        image_url = url_for('.image', project=project, upload_id=upload_id)
-        image_url += '?' + '&'.join(['%s=%s' % (k, v) for k, v in bbox.items()])
-        if after[0] is not None:
-            next_url = url_for('.validate', project=project, 
-                                upload_id=after[0],
-                                detection_id=after[1])
-        else:
-            next_url = None
-        if before[0] is not None:
-            last_url = url_for('.validate', project=project, 
-                                upload_id=before[0],
-                                detection_id=before[1])
-        else:
-            last_url = None
-        num_cols = 5
-        other = sorted(other)
-        rows = []
-        for i in range(0, len(other), num_cols):
-            rows.append(other[i:i+num_cols])
-        other = rows
-        return render_template('validate.html', project=project, 
-                               upload_id=upload_id, image_url=image_url,
-                               next_url=next_url, last_url=last_url, top=top, 
-                               other=sorted(other))
-    elif request.method == 'POST':
-        curator = get_curator(project, session)
-        (next_upload_id, next_detection_id), *_ = curator.pull(session, upload_id, detection_id)
-        if 'selection_from_top' in request.form:
-            selection = request.form['selection_from_top']
-        else:
-            selection = request.form['selection_from_other']
-        update_record(upload_id, detection_id, selection)
-        if not next_upload_id:
-            return redirect(url_for('.all_done', project=project))
-        return redirect(url_for('.validate', project=project, 
-                                upload_id=next_upload_id,
-                                detection_id=next_detection_id))
+        return redirect(url_for('.validate', project=project))
     
 @main.route('/validate/<project>/all_done', methods=['GET'])
 def all_done(project):
