@@ -53,10 +53,23 @@ if __name__ == '__main__':
         # next we query all the validations that come after this point in
         # time
         sql = '''
-        SELECT * FROM classifications
-        WHERE NOT validated AND project = '%s'
-        AND observation_time > '%s'
-        ORDER BY observation_time ASC
+        SELECT
+        c.upload_id,
+        c.detection_id,
+        c.observation_time,
+        c.class_name,
+        c.validated,
+        c.c0, c.c1, c.c2, 
+        c.c3, c.c4,
+        d.y0, d.y1, d.x0, d.x1
+        FROM 
+        classifications as c
+        LEFT JOIN detections as d
+        ON c.upload_id = d.upload_id 
+        AND c.detection_id = d.detection_id
+        WHERE not c.validated AND c.project = '%s'
+        AND c.observation_time > '%s'
+        ORDER BY c.observation_time ASC
         ''' % (project, latest_time)
         cursor = conn.cursor()
         cursor.execute(sql)
