@@ -27,21 +27,22 @@ if __name__ == '__main__':
     # next we can update the streams for each project
     time_format = '%Y-%m-%d %H:%M:%S.%f'
     field_to_index = {
-        'project': 0,
-        'upload_id': 1,
+        'upload_id': 0,
+        'detection_id': 1,
         'observation_time': 2,
-        'detection_id': 3,
-        'class_name': 4,
-        'c0': 6, 'c1': 7,
-        'c2': 8, 'c3': 9,
-        'c4': 10
+        'class_name': 3,
+        'c0': 4, 'c1': 5,
+        'c2': 6, 'c3': 7,
+        'c4': 8,
+        'y0': 9, 'y1': 10,
+        'x0': 11, 'x1': 12,
     }
     for project in projects:
         print('Working on project ', project)
         stream_name = '%s_validation_work_stream' % project
         # first we check to see if the stream has anything in it
         if redis_client.xlen(stream_name) == 0:
-            latest_time = datetime.datetime(1970, 1, 1)
+            latest_time = datetime(1970, 1, 1)
             print('Stream currently empty')
         else:
             # if the stream does exist we grab the latest entry
@@ -58,7 +59,6 @@ if __name__ == '__main__':
         c.detection_id,
         c.observation_time,
         c.class_name,
-        c.validated,
         c.c0, c.c1, c.c2, 
         c.c3, c.c4,
         d.y0, d.y1, d.x0, d.x1
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         # now we just ensure that the validation_workers group
         # had been created for this stream
         groups_info = redis_client.xinfo_groups(stream_name)
-        group_names = [group['name'].decode('utf-8') for group in groups]
-        if stream_name not in group_names:
+        group_names = [group['name'].decode('utf-8') for group in groups_info]
+        if 'validation_workers' not in group_names:
             print('creating validation_workers group for stream')
             redis_client.xgroup_create(stream_name, 'validation_workers', id=0)
