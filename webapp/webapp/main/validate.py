@@ -53,11 +53,12 @@ def get_class_names(project):
         
             
 def update_record(stream_name, stream_id, upload_id, detection_id, selection):
-    sql = '''
-    UPDATE classifications
-    SET class_name = '%s', validated = true
-    WHERE upload_id = '%s' AND detection_id = '%s'
-    ''' % (selection, upload_id, detection_id)
-    db.session.execute(sql)
-    db.session.commit()
+    if selection != '_skip':
+        sql = '''
+        UPDATE classifications
+        SET class_name = '%s', validated = true
+        WHERE upload_id = '%s' AND detection_id = '%s'
+        ''' % (selection, upload_id, detection_id)
+        db.session.execute(sql)
+        db.session.commit()
     redis_client.xack(stream_name, 'validation_workers', stream_id)

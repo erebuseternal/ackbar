@@ -35,6 +35,8 @@ def validate(project):
         else:
             new_work = redis_client.xreadgroup('validation_workers', session['username'],
                                                 {stream_name: '>'}, count=1)
+            if not new_work:
+                return redirect(url_for('.all_done', project=project))
             new_work = new_work[0][1]
             if new_work:
                 work_id, work_def = new_work[0]
