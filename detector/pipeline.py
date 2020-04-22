@@ -24,6 +24,8 @@ environment_variables = {
 env = Environment(name='env', environment_variables=environment_variables)
 conda = CondaDependencies()
 conda.add_conda_package('psycopg2')
+# have to use pip to install azure packages...
+conda.add_pip_package('azure-storage-blob')
 env.python.conda_dependencies = conda
 run_config = RunConfiguration()
 run_config.environment = env
@@ -36,6 +38,7 @@ prepare_step = PythonScriptStep(
     compute_target=compute_target,
     source_directory='prepare',
     runconfig=run_config,
+    params=environment_variables,
 )
 
 pipeline_steps = [prepare_step]

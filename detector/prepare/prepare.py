@@ -6,6 +6,8 @@ from broker import BlobBroker
 
 
 if __name__ == '__main__':
+    print('hello')
+    print(os.environ)
     parser = argparse.ArgumentParser()
     parser.add_argument('--output_path', help='path to write images to',
                         type=str, required=True)
@@ -16,8 +18,8 @@ if __name__ == '__main__':
     
     # connect to the database
     conn = psycopg2.connect('host=%s dbname=postgres user=ackbar@ackbar-postgres password=%s'
-                            % (os.environ['POSTGRES_HOSTNAME'],
-                               os.environ['POSTGRES_PASSWORD']))
+                            % (os.environ['AML_PARAMETER_POSTGRES_HOSTNAME'],
+                               os.environ['AML_PARAMETER_POSTGRES_PASSWORD']))
 
     # get the latest timestamp to produce detections
     sql = """

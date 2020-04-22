@@ -6,7 +6,7 @@ class BlobBroker(object):
     
     def __init__(self, container='ackbarstorage'):
         self.container = container
-        self.conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
+        self.conn_str = os.environ['AML_PARAMETER_AZURE_STORAGE_CONNECTION_STRING']
         self.blob_service_client = BlobServiceClient.from_connection_string(self.conn_str)
     
     def upload(self, fh, project, upload_id):
