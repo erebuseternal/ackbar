@@ -39,7 +39,7 @@ if __name__ == '__main__':
     WHERE observation_time > '%s'
     """ % latest_date
     cursor = conn.cursor()
-    cursor.execute()
+    cursor.execute(sql)
     broker = BlobBroker()
     for result in cursor:
         project, upload_id = result
