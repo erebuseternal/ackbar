@@ -14,6 +14,7 @@ output_data = PipelineData('output_data',
                             datastore=def_blob_store,
                             output_name='output_data',
                             is_directory=True)
+batch_input = output_data.as_dataset()
 
 compute_target = ws.compute_targets['cpu-cluster']
 
@@ -33,9 +34,9 @@ run_config.environment = env
 
 prepare_step = PythonScriptStep(
     script_name='prepare.py',
-    arguments=['--output', output_data],
+    arguments=['--output', batch_input],
     inputs=[],
-    outputs=[output_data],
+    outputs=[batch_input],
     compute_target=compute_target,
     source_directory='prepare',
     runconfig=run_config,
@@ -47,7 +48,7 @@ env = Environment(name='env', environment_variables=environment_variables)
 conda = CondaDependencies()
 conda.add_conda_package('numpy')
 conda.add_conda_package('Pillow')
-conda.add_conda_package('tensorflow==2.1.0')
+conda.add_pip_package('tensorflow==2.1.0')
 # have to use pip to install azure packages...
 conda.add_pip_package('azureml-sdk')
 env.python.conda_dependencies = conda
@@ -71,7 +72,7 @@ detection_data = PipelineData('detection_data',
                             is_directory=True)
 detection_step = ParallelRunStep(
     name='detection',
-    inputs=[output_data.as_dataset()],
+    inputs=[batch_input],
     output=detection_data,
     arguments=["--model_name", "mega_detector_v3",
                '--output', detection_data],

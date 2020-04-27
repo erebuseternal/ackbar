@@ -7,14 +7,14 @@ from broker import BlobBroker
 
 if __name__ == '__main__':
     print('hello')
-    print(os.environ)
     parser = argparse.ArgumentParser()
     parser.add_argument('--output_path', help='path to write images to',
                         type=str, required=True)
     args = parser.parse_args()
     
     # ensure output directory exists
-    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
+    os.makedirs(args.output_path, exist_ok=True)
+    print(args.output_path)
     
     # connect to the database
     conn = psycopg2.connect('host=%s dbname=postgres user=ackbar@ackbar-postgres password=%s'
@@ -44,9 +44,10 @@ if __name__ == '__main__':
     for result in cursor:
         project, upload_id = result
         file_path = '/'.join([
-            os.path.dirname(args.output_path),
+            args.output_path,
             '%s_%s.jpg' % (project, upload_id)
         ])
+        print(file_path)
         content = broker.download(project, upload_id)
         with open(file_path, 'wb') as fh:
             fh.write(content)

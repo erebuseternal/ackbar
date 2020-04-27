@@ -2,6 +2,7 @@ import os
 import argparse
 import json
 import numpy as np
+import tensorflow as tf
 from PIL import Image
 from azureml.core.model import Model
 
@@ -10,12 +11,10 @@ def init():
     global detection_model, output_path
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output_path', required=True, type=str)
     parser.add_argument('--model_name', required=True, type=str)
-    args = parser.parse_args()
+    args, unknown_args = parser.parse_known_args()
     
-    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
-    output_path = args.output_path
+    output_path = os.environ['AZUREML_BI_OUTPUT_PATH']
     
     model_path = Model.get_model_path(args.model_name)
     detection_model = tf.saved_model.load(model_path).signatures['default']
@@ -27,10 +26,10 @@ def break_path(file_path):
 
 
 def load_image(file_path):
-    with open(file_path, 'rb') as fh:
-        image = Image(fh)
-    image.convert('RGB') for image in images
-    image.resize((1494, 2048)) for image in images
+    image = Image.open(file_path)
+    image.convert('RGB')
+    image.resize((1494, 2048))
+    return image
 
 
 def run(mini_batch):
@@ -54,3 +53,4 @@ def run(mini_batch):
     output_name = '%s/%s.json' % (output_path, hash(identifiers))
     with open(output_name, 'w') as fh:
         json.dump(records, output_name)
+        
