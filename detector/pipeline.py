@@ -6,6 +6,7 @@ from azureml.pipeline.core import Pipeline, PipelineData
 from azureml.core import Experiment, Environment, ScriptRunConfig, RunConfiguration
 from azureml.core.conda_dependencies import CondaDependencies
 from azureml.contrib.pipeline.steps import ParallelRunConfig, ParallelRunStep
+from azureml.core.runconfig import DEFAULT_GPU_IMAGE
 
 ws = Workspace.from_config()
 
@@ -52,18 +53,20 @@ conda.add_pip_package('tensorflow==2.1.0')
 # have to use pip to install azure packages...
 conda.add_pip_package('azureml-sdk')
 env.python.conda_dependencies = conda
+env.docker.base_image = DEFAULT_GPU_IMAGE
 
 compute_target = ws.compute_targets['gpu-cluster']
 parallel_run_config = ParallelRunConfig(
     environment=env,
     entry_script="detect.py",
     source_directory="prepare",
-    mini_batch_size="20",
+    mini_batch_size="10",
     compute_target=compute_target,
     process_count_per_node=1,
+    run_invocation_timeout=300,
     node_count=1,
     error_threshold=1,
-    output_action="append_row",
+    output_action="summary_only",
 )
 
 detection_data = PipelineData('detection_data',

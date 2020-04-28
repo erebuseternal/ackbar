@@ -22,20 +22,20 @@ def init():
 
 def break_path(file_path):
     file_name = file_path.split('/')[-1].split('.')[0]
-    return file_name.split('_')
+    return tuple(file_name.split('_'))
 
 
 def load_image(file_path):
     image = Image.open(file_path)
-    image.convert('RGB')
-    image.resize((1494, 2048))
+    image = image.convert('RGB')
+    image = image.resize((1494, 2048))
     return image
 
 
 def run(mini_batch):
     records = []
     file_paths = list(mini_batch)
-    identifiers = [break_path(file_path) for file_path in file_paths]
+    identifiers = tuple([break_path(file_path) for file_path in file_paths])
     images = [load_image(file_path) for file_path in file_paths]
     images = [np.asarray(image, np.float32) for image in images]
     input_tensor = tf.convert_to_tensor(np.array(images))
@@ -48,9 +48,10 @@ def run(mini_batch):
             if score >= 0.9 and label == 1.:
                 y1, x0, y0, x1 = [float(e) for e in bboxes[j][k]]
                 records.append((
-                    project, upload_id, observation_time, k, y0, y1, x0, x1
+                    project, upload_id, k, y0, y1, x0, x1
                 ))
     output_name = '%s/%s.json' % (output_path, hash(identifiers))
     with open(output_name, 'w') as fh:
-        json.dump(records, output_name)
+        json.dump(records, fh)
+    return file_paths
         
