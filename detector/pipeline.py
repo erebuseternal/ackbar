@@ -17,6 +17,11 @@ output_data = PipelineData('output_data',
                             is_directory=True)
 batch_input = output_data.as_dataset()
 
+detection_data = PipelineData('detection_data',
+                            datastore=def_blob_store,
+                            output_name='detection_data',
+                            is_directory=True)
+
 compute_target = ws.compute_targets['cpu-cluster']
 
 environment_variables = {
@@ -38,6 +43,17 @@ prepare_step = PythonScriptStep(
     arguments=['--output', batch_input],
     inputs=[],
     outputs=[batch_input],
+    compute_target=compute_target,
+    source_directory='prepare',
+    runconfig=run_config,
+    params=environment_variables,
+)
+
+upload_step = PythonScriptStep(
+    script_name='upload.py',
+    arguments=['--input', detection_data],
+    inputs=[detection_data],
+    outputs=[],
     compute_target=compute_target,
     source_directory='prepare',
     runconfig=run_config,
@@ -69,10 +85,7 @@ parallel_run_config = ParallelRunConfig(
     output_action="summary_only",
 )
 
-detection_data = PipelineData('detection_data',
-                            datastore=def_blob_store,
-                            output_name='detection_data',
-                            is_directory=True)
+
 detection_step = ParallelRunStep(
     name='detection',
     inputs=[batch_input],
@@ -83,8 +96,8 @@ detection_step = ParallelRunStep(
     allow_reuse=False
 )
 
-pipeline_steps = [prepare_step, detection_step]
+pipeline_steps = [prepare_step, detection_step, upload_step]
 
 pipeline = Pipeline(workspace=ws, steps=pipeline_steps)
 
-pipeline_run = Experiment(ws, 'test_prepare_detect').submit(pipeline)
+pipeline_run = Experiment(ws, 'test_prepare_detect_upload').submit(pipeline)

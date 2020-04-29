@@ -6,7 +6,6 @@ from broker import BlobBroker
 
 
 if __name__ == '__main__':
-    print('hello')
     parser = argparse.ArgumentParser()
     parser.add_argument('--output_path', help='path to write images to',
                         type=str, required=True)
@@ -33,11 +32,13 @@ if __name__ == '__main__':
         latest_date = result[0]
     except StopIteration:
         latest_date = datetime.datetime(1970, 1, 1)
+    print(latest_date)
     
     sql = """
     SELECT project, upload_id FROM uploads
     WHERE observation_time > '%s'
     """ % latest_date
+    print(sql)
     cursor = conn.cursor()
     cursor.execute(sql)
     broker = BlobBroker()

@@ -48,7 +48,7 @@ def run(mini_batch):
             if score >= 0.9 and label == 1.:
                 y1, x0, y0, x1 = [float(e) for e in bboxes[j][k]]
                 records.append((
-                    project, upload_id, k, y0, y1, x0, x1
+                    project, int(upload_id), k, y0, y1, x0, x1
                 ))
     output_name = '%s/%s.json' % (output_path, hash(identifiers))
     with open(output_name, 'w') as fh:
