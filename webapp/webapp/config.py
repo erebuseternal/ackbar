@@ -6,9 +6,9 @@ class Config(object):
     REDIS_HOST = 'localhost'
     STORAGE_HOST = '172.17.0.3'
     STORAGE_PORT = 5000
-    POSTGRES_HOST = '172.17.0.2'
-    POSTGRES_PASSWORD = 'ackbar'
-    POSTGRES_USER = 'postgres'
+    POSTGRES_HOST = os.environ['POSTGRES_HOSTNAME']
+    POSTGRES_PASSWORD = os.environ['POSTGRES_PASSWORD']
+    POSTGRES_USER = 'ackbar@ackbar-postgres'
     POSTGRES_DB = 'postgres'
     SQLALCHEMY_DATABASE_URI = ('postgresql+psycopg2://%s:%s@%s/%s' 
                                % (POSTGRES_USER, POSTGRES_PASSWORD, 

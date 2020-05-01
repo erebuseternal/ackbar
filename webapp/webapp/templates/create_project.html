@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Create Project{% endblock %}
+
+{% block page_content %}
+<h1>Create Project</h1>
+<form method="POST">
+    <div class="form-group">
+        <h3>Project Name</h3>
+        <input type="text" name="name">
+        <h3>Project Description</h3>
+        <textarea name="description"></textarea>
+        <h3>Classes</h3>
+        <p>Enumerate your classes as comma separated names</p>
+        <p>Ex: bear,horse,beaver<p>
+        <textarea name="classes"></textarea>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>
+{% endblock %}

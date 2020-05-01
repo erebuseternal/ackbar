@@ -3,6 +3,7 @@ from io import BytesIO
 from . import main
 from .validate import get_curator, get_image, crop_image, update_record, get_class_names
 from .. import redis_client
+from .. import db
 
 def serve_pil_image(pil_img):
     img_io = BytesIO()
@@ -12,7 +13,41 @@ def serve_pil_image(pil_img):
 
 @main.route('/projects', methods=['GET'])
 def projects():
-    return render_template('projects.html')
+    sql = '''
+    SELECT project, description
+    FROM projects
+    '''
+    projects = db.session.execute(sql)
+    return render_template('projects.html', projects=projects)
+
+@main.route('/create_project', methods=['GET', 'POST'])
+def create_project():
+    if request.method == 'GET':
+        return render_template('create_project.html')
+    else:
+        name = request.form['name'].strip().lower()
+        description = request.form['description']
+        classes = request.form['classes'].split(',')
+        classes = [c.strip() for c in classes if c.strip()]
+        # create the project in the projects table
+        sql = '''
+        INSERT INTO projects
+        VALUES ('%s', '%s')
+        ''' % (name, description)
+        db.session.execute(sql)
+        db.session.commit()
+        # add the class names to the class names table
+        values = ',\n'.join([
+            "('%s', '%s')" % (name, c)
+            for c in classes
+        ])
+        sql = '''
+        INSERT INTO class_names
+        VALUES %s
+        ''' % values
+        db.session.execute(sql)
+        db.session.commit()
+        return redirect(url_for('.projects'))
 
 @main.route('/validate/<project>', methods=['GET', 'POST'])
 def validate(project):
