@@ -2,6 +2,7 @@ from flask import render_template, request, session, url_for, redirect, make_res
 from io import BytesIO
 from . import main
 from .validate import get_curator, get_image, crop_image, update_record, get_class_names
+from .workspace import build_new_model, register_model
 from .. import redis_client
 from .. import db
 
@@ -47,6 +48,8 @@ def create_project():
         ''' % values
         db.session.execute(sql)
         db.session.commit()
+        model_name = build_new_model(name, len(classes))
+        register_model(model_name, name)
         return redirect(url_for('.projects'))
 
 @main.route('/validate/<project>', methods=['GET', 'POST'])
