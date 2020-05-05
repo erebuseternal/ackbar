@@ -50,7 +50,7 @@ def build_new_model(project, num_classes, img_shape=IMG_SHAPE,
     model_name = '%s_v1' % project
     if not os.path.exists(model_name):
         os.mkdir(model_name)
-    tf.saved_model.save(model, model_name + '/')
+    tf.keras.models.save_model(model, model_name + '/')
     return model_name
 
 
