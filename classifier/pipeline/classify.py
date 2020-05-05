@@ -41,10 +41,11 @@ def run(minibatch):
     class_predictions = [[int(e) for e in np.argsort(-array)[:5]] for array in predictions]
     class_confidences = [[float(predictions[i][j]) for j in preds]
                          for i, preds in enumerate(class_predictions)]
+    identifiers = [file_path.split('.')[0].split('_') for file_path in file_paths]
     data = {
         'class_predictions': class_predictions,
         'class_confidences': class_confidences,
-        'file_paths': file_paths,
+        'identifiers': identifiers,
     }
     output_name = '%s/%s' % (output_path, hash(file_paths))
     with open(output_name, 'w') as fh:
