@@ -11,7 +11,7 @@ from azureml.core import Workspace
 IMG_SIZE = (160, 160)
 
 
-def __init__():
+def init():
     global classification_model, output_path
     
     parser = argparse.ArgumentParser()

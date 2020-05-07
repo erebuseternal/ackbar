@@ -52,18 +52,16 @@ if __name__ == '__main__':
     FROM detections
     WHERE observation_time > '%s'
     AND project = '%s'
-    """ % (latest_date, project)
-    print(sql)
+    """ % (latest_date, args.project)
     cursor = conn.cursor()
     cursor.execute(sql)
     broker = BlobBroker()
     for result in cursor:
         upload_id, detection_id, y0, y1, x0, x1 = result
-        project, upload_id = result
-        image = Image.open(io.BytesIO(broker.download(project, upload_id)))
-        image = crop_image(image, x0, y0, x1, y1)
+        image = Image.open(io.BytesIO(broker.download(args.project, upload_id)))
+        image = crop_image(image, x0, y1, x1, y0)
         file_path = '/'.join([
             args.output_path,
-            '%s_%s_%s.jpg' % (project, upload_id, detection_id)
+            '%s_%s_%s.jpg' % (args.project, upload_id, detection_id)
         ])
         image.save(file_path)

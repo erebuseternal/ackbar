@@ -39,7 +39,7 @@ if __name__ == '__main__':
     FROM detections
     WHERE observation_time > '%s'
     AND project = '%s'
-    """ % (latest_date, project)
+    """ % (latest_date, args.project)
     cursor = conn.cursor()
     cursor.execute(sql)
     broker = BlobBroker()
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     sql = """
     SELECT class_name from class_names
     WHERE project = '%s'
-    """ % project
+    """ % args.project
     cursor = conn.cursor()
     cursor.execute(sql)
     class_names = sorted([result[0] for result in cursor])
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         'identifiers',
     ]
     classification_data = {
-        k: list() for key in data_keys
+        k: list() for k in data_keys
     }
     for file_path in os.listdir(args.input_path):
         with open('/'.join([args.input_path, file_path]), 'r') as fh:
@@ -74,15 +74,16 @@ if __name__ == '__main__':
                 classification_data[key].extend(data_partition[key])
     upload_rows = []
     print(list(observation_times.keys()))
+    print(classification_data)
     zipped_data = zip(
         classification_data['class_predictions'],
         classification_data['class_confidences'],
         classification_data['identifiers']
     )
-    for predictions, confidences, (project, upload_id, detection_id) in zipped_data:
+    for predictions, confidences, (_, upload_id, detection_id) in zipped_data:
         predictions = [class_names[p] for p in predictions]
-        observation_time = observation_times[(upload_id, detection_id)]
-        record = [project, upload_id, observation_time, detection_id, predictions[0], False] + predictions
+        observation_time = observation_times[(int(upload_id), int(detection_id))]
+        record = [args.project, upload_id, observation_time, detection_id, predictions[0], False] + predictions
         upload_rows.append(record)
         
     # finally we upload all the new records
